@@ -9,6 +9,12 @@ const logger = require('koa-logger')
 const index = require('./routes/index')
 const users = require('./routes/users')
 
+const session = require('koa-generic-session')
+const redisStore= require('koa-redis')
+
+const { REDIS_CONF } =require('./conf/db')
+
+
 // error handler
 onerror(app)
 
@@ -31,6 +37,21 @@ app.use(async (ctx, next) => {
   const ms = new Date() - start
   console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
 })
+
+app.keys=['jkljkl']
+app.use(session({
+    key:'weibo.sid',
+    prefix:'weibo.sess:', // redis key的前缀
+    cookie:{
+        path: '/',
+        httpOnly:true,
+        maxAge:24*60*60*1000
+    },
+   // ttl:24*60*60*1000,  默认与maxAge一致
+    store:redisStore({
+         all:`${REDIS_CONF.host}:${REDIS_CONF.port}`
+    })
+  }))
 
 // routes
 app.use(index.routes(), index.allowedMethods())
